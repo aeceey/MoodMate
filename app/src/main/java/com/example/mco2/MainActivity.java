@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView; // Import TextView
+import android.widget.TextView;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -24,12 +24,9 @@ public class MainActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // This is the line that opens the Dashboard Activity
+                // Opens the Dashboard Activity
                 Intent intent = new Intent(MainActivity.this, Dashboard.class);
                 startActivity(intent);
-                // You can add finish(); here if you don't want the user to go back to login
-                // after they've successfully logged in.
-                // finish();
             }
         });
 
