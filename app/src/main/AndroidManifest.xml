@@ -13,6 +13,9 @@
         android:theme="@style/Theme.MCO2"
         tools:targetApi="31">
         <activity
+            android:name=".NewEntryActivity"
+            android:exported="false" />
+        <activity
             android:name=".Dashboard"
             android:exported="false" />
         <activity
