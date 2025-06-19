@@ -13,3 +13,17 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+.idea/
+# You can add other common Android ignores too, like:
+local.properties
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.iml
+*.jks
+*.user
+*.keystore
+*.credentials
+*.p12
