@@ -11,13 +11,6 @@ public class NewEntryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_entry);
 
-        // Optional: Set up toolbar with back arrow if you want
-        Toolbar toolbar = findViewById(R.id.new_entry_toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("New Entry");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
     }
 
     // Handle the back arrow
