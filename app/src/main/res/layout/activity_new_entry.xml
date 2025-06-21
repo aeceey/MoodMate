@@ -14,15 +14,15 @@
         android:background="@drawable/rounded_transparent_white_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.534"
+        app:layout_constraintHorizontal_bias="0.488"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.156" />
+        app:layout_constraintVertical_bias="0.154" />
 
     <View
         android:id="@+id/mood_view3"
-        android:layout_width="368dp"
-        android:layout_height="234dp"
+        android:layout_width="365dp"
+        android:layout_height="246dp"
         android:background="@drawable/rounded_transparent_white_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -30,6 +30,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.537" />
+
+
+    <!-- Mood Emoji Buttons -->
 
     <EditText
         android:id="@+id/et_mood_log2"
@@ -48,10 +51,7 @@
         app:layout_constraintHorizontal_bias="0.528"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.578" />
-
-
-    <!-- Mood Emoji Buttons -->
+        app:layout_constraintVertical_bias="0.586" />
 
     <View
         android:id="@+id/mood_view"
@@ -63,7 +63,7 @@
         app:layout_constraintHorizontal_bias="0.488"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.279" />
+        app:layout_constraintVertical_bias="0.281" />
 
     <TextView
         android:id="@+id/mood_angry"
@@ -170,7 +170,7 @@
     <EditText
         android:id="@+id/et_entry_title"
         android:layout_width="324dp"
-        android:layout_height="44dp"
+        android:layout_height="50dp"
         android:background="@drawable/rounded_edittext_background"
         android:hint="Give your entry a title..."
         android:padding="13dp"
@@ -186,22 +186,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.44" />
 
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="23dp" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="391dp" />
-
     <Button
-        android:id="@+id/button"
+        android:id="@+id/activity_new_entry_btn_savequote"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:backgroundTint="#091F92"
