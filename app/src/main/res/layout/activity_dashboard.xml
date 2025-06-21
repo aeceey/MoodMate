@@ -9,7 +9,7 @@
     tools:context=".DashboardActivity">
 
     <View
-        android:id="@+id/grayRoundedTop"
+        android:id="@+id/tv_entries"
         android:layout_width="413dp"
         android:layout_height="669dp"
         android:background="@drawable/lightblack"
@@ -35,16 +35,16 @@
         app:layout_constraintVertical_bias="0.278" />
 
     <View
-        android:id="@+id/view"
+        android:id="@+id/view_bg"
         android:layout_width="364dp"
         android:layout_height="124dp"
-        app:layout_constraintBottom_toTopOf="@+id/grayRoundedTop"
+        app:layout_constraintBottom_toTopOf="@+id/tv_entries"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView2"
+        android:id="@+id/tv_quotes"
         android:layout_width="156dp"
         android:layout_height="wrap_content"
         android:text="Quotes"
@@ -58,11 +58,11 @@
         app:layout_constraintVertical_bias="0.102" />
 
     <View
-        android:id="@+id/view8"
+        android:id="@+id/view_entry1"
         android:layout_width="363dp"
         android:layout_height="89dp"
         android:background="@drawable/gray_rounded_bg"
-        app:layout_constraintBottom_toBottomOf="@+id/grayRoundedTop"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_entries"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -71,32 +71,32 @@
     <!-- Floating Action Button to Add New Entry -->
 
     <View
-        android:id="@+id/view3"
+        android:id="@+id/view_entry2"
         android:layout_width="363dp"
         android:layout_height="89dp"
         android:background="@drawable/gray_rounded_bg"
-        app:layout_constraintBottom_toBottomOf="@+id/grayRoundedTop"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_entries"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <View
-        android:id="@+id/view4"
+        android:id="@+id/view_entry3"
         android:layout_width="363dp"
         android:layout_height="89dp"
         android:background="@drawable/gray_rounded_bg"
-        app:layout_constraintBottom_toBottomOf="@+id/grayRoundedTop"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_entries"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.627" />
 
     <View
-        android:id="@+id/view5"
+        android:id="@+id/view_entry4"
         android:layout_width="363dp"
         android:layout_height="89dp"
         android:background="@drawable/gray_rounded_bg"
-        app:layout_constraintBottom_toBottomOf="@+id/grayRoundedTop"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_entries"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
