@@ -8,7 +8,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.mco2.R; // Make sure this R is correctly pointing to your project's R file
-import com.example.mco2.model.JournalEntry;
+import com.example.mco2.model.JournalEntry; // Assuming you have a JournalEntry model
 
 import java.util.List;
 

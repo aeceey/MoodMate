@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
                 // Opens the Dashboard Activity
                 Intent intent = new Intent(MainActivity.this, Dashboard.class);
                 startActivity(intent);
+                finish(); // <--- ADD THIS LINE: Closes MainActivity after launching Dashboard
             }
         });
 

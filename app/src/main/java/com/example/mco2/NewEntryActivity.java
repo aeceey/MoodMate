@@ -45,7 +45,7 @@ public class NewEntryActivity extends AppCompatActivity {
         etMoodLog = findViewById(R.id.et_mood_log2);
         tvCurrentDate = findViewById(R.id.textView);
         btnSaveEntry = findViewById(R.id.activity_new_entry_btn_saveentry);
-        btnSaveQuote = findViewById(R.id.activity_new_entry_btn_savequote);
+        btnSaveQuote = findViewById(R.id.activity_new_entry_btn_savequote); // Placeholder for quote button
 
         moodAngry = findViewById(R.id.mood_angry);
         moodSad = findViewById(R.id.mood_sad);
@@ -62,12 +62,16 @@ public class NewEntryActivity extends AppCompatActivity {
         }
 
         // Display current date if not editing or if no date is set for existing entry
-        if (existingEntry == null || existingEntry.getDate() == null || existingEntry.getDate().isEmpty()) {
+        // This part needs to be careful: if editing, it should show the existing entry's date.
+        // If creating new, it should show current date.
+        if (existingEntry != null && existingEntry.getDate() != null && !existingEntry.getDate().isEmpty()) {
+            // If editing an existing entry, display its date
+            tvCurrentDate.setText("Today: " + existingEntry.getDate());
+        } else {
+            // For a new entry, display the current date and time
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
             String currentDateAndTime = sdf.format(new Date());
             tvCurrentDate.setText("Today: " + currentDateAndTime);
-        } else {
-            tvCurrentDate.setText("Today: " + existingEntry.getDate());
         }
 
 
@@ -78,6 +82,7 @@ public class NewEntryActivity extends AppCompatActivity {
                 resetMoodBackgrounds();
                 TextView clickedMood = (TextView) v;
                 selectedMood = clickedMood.getText().toString();
+                // Apply the selected background, assuming mood_selector_background_selected is defined
                 clickedMood.setBackgroundResource(R.drawable.mood_selector_background_selected);
                 Toast.makeText(NewEntryActivity.this, "Mood selected: " + selectedMood, Toast.LENGTH_SHORT).show();
             }
@@ -89,7 +94,6 @@ public class NewEntryActivity extends AppCompatActivity {
         moodHappy.setOnClickListener(moodClickListener);
         moodExcited.setOnClickListener(moodClickListener);
 
-
         // Set click listener for Save Entry button
         btnSaveEntry.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,6 +101,14 @@ public class NewEntryActivity extends AppCompatActivity {
                 saveOrUpdateJournalEntry();
             }
         });
+
+        // (Optional) Set click listener for btnSaveQuote if it has functionality
+        if (btnSaveQuote != null) {
+            btnSaveQuote.setOnClickListener(v -> {
+                // Implement quote saving logic here, if any
+                Toast.makeText(NewEntryActivity.this, "Save Quote functionality (not yet implemented)", Toast.LENGTH_SHORT).show();
+            });
+        }
     }
 
     private void loadEntryForEditing(long entryId) {
@@ -104,10 +116,9 @@ public class NewEntryActivity extends AppCompatActivity {
         if (existingEntry != null) {
             etEntryTitle.setText(existingEntry.getTitle());
             etMoodLog.setText(existingEntry.getContent());
-            tvCurrentDate.setText("Today: " + existingEntry.getDate());
+            // Date is handled in onCreate based on existingEntry status
             selectedMood = existingEntry.getMood();
             highlightSelectedMood(selectedMood); // Highlight the mood if set
-            // You might want to display the quote for editing too
         } else {
             Toast.makeText(this, "Failed to load entry for editing.", Toast.LENGTH_SHORT).show();
             entryIdToEdit = -1; // Reset to ensure it's treated as a new entry if loading fails
@@ -115,16 +126,23 @@ public class NewEntryActivity extends AppCompatActivity {
     }
 
     private void highlightSelectedMood(String mood) {
-        resetMoodBackgrounds();
-        if (moodAngry.getText().toString().equals(mood)) moodAngry.setBackgroundResource(R.drawable.mood_selector_background_selected);
-        else if (moodSad.getText().toString().equals(mood)) moodSad.setBackgroundResource(R.drawable.mood_selector_background_selected);
-        else if (moodNeutral.getText().toString().equals(mood)) moodNeutral.setBackgroundResource(R.drawable.mood_selector_background_selected);
-        else if (moodHappy.getText().toString().equals(mood)) moodHappy.setBackgroundResource(R.drawable.mood_selector_background_selected);
-        else if (moodExcited.getText().toString().equals(mood)) moodExcited.setBackgroundResource(R.drawable.mood_selector_background_selected);
+        resetMoodBackgrounds(); // First, reset all backgrounds to default
+        // Then, apply the selected background to the appropriate TextView
+        if (moodAngry.getText().toString().equals(mood)) {
+            moodAngry.setBackgroundResource(R.drawable.mood_selector_background_selected);
+        } else if (moodSad.getText().toString().equals(mood)) {
+            moodSad.setBackgroundResource(R.drawable.mood_selector_background_selected);
+        } else if (moodNeutral.getText().toString().equals(mood)) {
+            moodNeutral.setBackgroundResource(R.drawable.mood_selector_background_selected);
+        } else if (moodHappy.getText().toString().equals(mood)) {
+            moodHappy.setBackgroundResource(R.drawable.mood_selector_background_selected);
+        } else if (moodExcited.getText().toString().equals(mood)) {
+            moodExcited.setBackgroundResource(R.drawable.mood_selector_background_selected);
+        }
     }
 
-
     private void resetMoodBackgrounds() {
+        // Ensure mood_selector_background is defined in your drawable folder
         moodAngry.setBackgroundResource(R.drawable.mood_selector_background);
         moodSad.setBackgroundResource(R.drawable.mood_selector_background);
         moodNeutral.setBackgroundResource(R.drawable.mood_selector_background);
@@ -135,30 +153,36 @@ public class NewEntryActivity extends AppCompatActivity {
     private void saveOrUpdateJournalEntry() {
         String title = etEntryTitle.getText().toString().trim();
         String content = etMoodLog.getText().toString().trim();
+        // Extracting date from TextView (ensure it includes "Today: " prefix to remove)
         String date = tvCurrentDate.getText().toString().replace("Today: ", "").trim();
-        String quote = "Placeholder Quote"; // Still a placeholder
+        String quote = "Placeholder Quote"; // Still a placeholder for now, you can make this editable
 
         if (content.isEmpty()) {
             Toast.makeText(this, "Journal entry cannot be empty!", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (selectedMood.isEmpty()) {
+            Toast.makeText(this, "Please select a mood!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        if (entryIdToEdit == -1) { // New entry
+        if (entryIdToEdit == -1) { // This is a new entry
             JournalEntry entry = new JournalEntry(date, selectedMood, title, content, quote);
             long newRowId = dbHelper.insertEntry(entry);
             if (newRowId != -1) {
                 Toast.makeText(this, "Entry saved successfully!", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK); // Indicate success for Dashboard to refresh
                 finish(); // Go back to Dashboard
             } else {
                 Toast.makeText(this, "Error saving entry.", Toast.LENGTH_SHORT).show();
             }
-        } else { // Update existing entry
+        } else { // This is an existing entry to update
             if (existingEntry != null) {
                 existingEntry.setDate(date);
                 existingEntry.setMood(selectedMood);
                 existingEntry.setTitle(title);
                 existingEntry.setContent(content);
-                existingEntry.setQuote(quote); // Update quote if it can be changed
+                existingEntry.setQuote(quote); // Update quote if it can be changed, otherwise keep original
 
                 int rowsAffected = dbHelper.updateEntry(existingEntry);
                 if (rowsAffected > 0) {

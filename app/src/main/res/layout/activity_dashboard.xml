@@ -47,16 +47,18 @@
         app:layout_constraintStart_toStartOf="@+id/view_dark_square"
         app:layout_constraintTop_toBottomOf="@+id/tv_entries"
         app:layout_constraintVertical_bias="0.0"
-        tools:listitem="@layout/item_journal_entry" /> <com.google.android.material.floatingactionbutton.FloatingActionButton
-    android:id="@+id/fab_add_entry"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_margin="24dp"
-    android:backgroundTint="#D500F9"
-    android:contentDescription="Add New Entry"
-    android:src="@android:drawable/ic_input_add"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:tint="@android:color/white" />
+        tools:listitem="@layout/item_journal_entry" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add_entry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:backgroundTint="#D500F9"
+        android:contentDescription="Add New Entry"
+        android:src="@android:drawable/ic_input_add"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="@android:color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,13 +17,15 @@ import com.example.mco2.model.JournalEntry;
 
 public class EntryDetailActivity extends AppCompatActivity {
 
-    public static final String EXTRA_ENTRY_ID = "entry_id"; // Key for passing entry ID
+    public static final String EXTRA_ENTRY_ID = "entry_id";
     private long entryId = -1;
     private JournalDbHelper dbHelper;
     private JournalEntry currentEntry;
 
     private TextView tvDetailDate, tvDetailMood, tvDetailTitle, tvDetailContent, tvDetailQuote;
     private Button btnEditEntry, btnDeleteEntry;
+
+    private static final int EDIT_ENTRY_REQUEST_CODE = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,65 +34,103 @@ public class EntryDetailActivity extends AppCompatActivity {
 
         dbHelper = new JournalDbHelper(this);
 
-        // Initialize UI elements
+        // Initialize UI elements and add null checks immediately
         tvDetailDate = findViewById(R.id.tv_detail_date);
+        if (tvDetailDate == null) Log.e("EntryDetailActivity", "tvDetailDate is null. Check activity_entry_detail.xml for @id/tv_detail_date");
         tvDetailMood = findViewById(R.id.tv_detail_mood);
+        if (tvDetailMood == null) Log.e("EntryDetailActivity", "tvDetailMood is null. Check activity_entry_detail.xml for @id/tv_detail_mood");
         tvDetailTitle = findViewById(R.id.tv_detail_title);
+        if (tvDetailTitle == null) Log.e("EntryDetailActivity", "tvDetailTitle is null. Check activity_entry_detail.xml for @id/tv_detail_title");
         tvDetailContent = findViewById(R.id.tv_detail_content);
+        if (tvDetailContent == null) Log.e("EntryDetailActivity", "tvDetailContent is null. Check activity_entry_detail.xml for @id/tv_detail_content");
         tvDetailQuote = findViewById(R.id.tv_detail_quote);
+        if (tvDetailQuote == null) Log.e("EntryDetailActivity", "tvDetailQuote is null. Check activity_entry_detail.xml for @id/tv_detail_quote");
+
         btnEditEntry = findViewById(R.id.btn_edit_entry);
+        if (btnEditEntry == null) Log.e("EntryDetailActivity", "btnEditEntry is null. Check activity_entry_detail.xml for @id/btn_edit_entry");
         btnDeleteEntry = findViewById(R.id.btn_delete_entry);
+        if (btnDeleteEntry == null) Log.e("EntryDetailActivity", "btnDeleteEntry is null. Check activity_entry_detail.xml for @id/btn_delete_entry");
+
 
         // Get entry ID from Intent
         if (getIntent().hasExtra(EXTRA_ENTRY_ID)) {
             entryId = getIntent().getLongExtra(EXTRA_ENTRY_ID, -1);
+            Log.d("EntryDetailActivity", "Received entry ID: " + entryId);
             if (entryId != -1) {
-                loadEntryDetails();
+                loadEntryDetails(); // Initial load of entry details
             } else {
-                Toast.makeText(this, "Error: Invalid entry ID.", Toast.LENGTH_SHORT).show();
-                finish(); // Close activity if ID is invalid
+                Toast.makeText(this, "Error: Invalid entry ID provided.", Toast.LENGTH_SHORT).show();
+                Log.e("EntryDetailActivity", "Invalid entry ID: " + entryId);
+                finish();
             }
         } else {
             Toast.makeText(this, "Error: No entry ID provided.", Toast.LENGTH_SHORT).show();
-            finish(); // Close activity if no ID
+            Log.e("EntryDetailActivity", "No entry ID provided in Intent.");
+            finish();
         }
 
-        // Set click listeners for buttons
-        btnEditEntry.setOnClickListener(v -> {
-            // TODO: Implement Edit functionality
-            // For now, it will open NewEntryActivity for editing
-            if (currentEntry != null) {
-                Intent intent = new Intent(EntryDetailActivity.this, NewEntryActivity.class);
-                intent.putExtra(NewEntryActivity.EXTRA_EDIT_ENTRY_ID, entryId); // Pass ID for editing
-                startActivity(intent);
-            }
-        });
+        // Set click listeners for buttons (only if buttons are found)
+        if (btnEditEntry != null) {
+            btnEditEntry.setOnClickListener(v -> {
+                if (currentEntry != null && entryId != -1) {
+                    Intent intent = new Intent(EntryDetailActivity.this, NewEntryActivity.class);
+                    intent.putExtra(NewEntryActivity.EXTRA_EDIT_ENTRY_ID, entryId);
+                    startActivityForResult(intent, EDIT_ENTRY_REQUEST_CODE);
+                    Log.d("EntryDetailActivity", "Launching NewEntryActivity for editing ID: " + entryId);
+                } else {
+                    Toast.makeText(EntryDetailActivity.this, "Cannot edit, entry data not available.", Toast.LENGTH_SHORT).show();
+                    Log.w("EntryDetailActivity", "Attempted to edit null entry or invalid ID.");
+                }
+            });
+        }
 
-        btnDeleteEntry.setOnClickListener(v -> showDeleteConfirmationDialog());
+        if (btnDeleteEntry != null) {
+            btnDeleteEntry.setOnClickListener(v -> showDeleteConfirmationDialog());
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh entry details in case it was edited in NewEntryActivity
         if (entryId != -1) {
             loadEntryDetails();
+        } else {
+            Log.w("EntryDetailActivity", "onResume: entryId is invalid, finishing activity.");
+            finish();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == EDIT_ENTRY_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Log.d("EntryDetailActivity", "Returned from NewEntryActivity with RESULT_OK. Refreshing details.");
+                loadEntryDetails();
+                setResult(RESULT_OK); // Signal to Dashboard that something might have changed
+            } else {
+                Log.d("EntryDetailActivity", "Returned from NewEntryActivity with non-OK result.");
+            }
         }
     }
 
     private void loadEntryDetails() {
-        // Fetch a single entry by ID (you'll need to add this method to JournalDbHelper)
-        currentEntry = dbHelper.getEntryById(entryId); // This method needs to be added to JournalDbHelper
+        currentEntry = dbHelper.getEntryById(entryId);
 
         if (currentEntry != null) {
-            tvDetailDate.setText("Date: " + currentEntry.getDate());
-            tvDetailMood.setText("Mood: " + currentEntry.getMood());
-            tvDetailTitle.setText(currentEntry.getTitle().isEmpty() ? "No Title" : currentEntry.getTitle());
-            tvDetailContent.setText(currentEntry.getContent());
-            tvDetailQuote.setText("Quote: " + (currentEntry.getQuote().isEmpty() ? "N/A" : currentEntry.getQuote()));
+            // Check if TextViews are not null before setting text
+            if (tvDetailDate != null) tvDetailDate.setText("Date: " + currentEntry.getDate());
+            if (tvDetailMood != null) tvDetailMood.setText("Mood: " + currentEntry.getMood());
+            if (tvDetailTitle != null) tvDetailTitle.setText(currentEntry.getTitle().isEmpty() ? "No Title" : currentEntry.getTitle());
+            if (tvDetailContent != null) tvDetailContent.setText(currentEntry.getContent());
+            if (tvDetailQuote != null) tvDetailQuote.setText("Quote: " + (currentEntry.getQuote().isEmpty() ? "N/A" : currentEntry.getQuote()));
+
+            Log.d("EntryDetailActivity", "Entry details loaded for ID: " + entryId + ", Title: " + currentEntry.getTitle());
         } else {
-            Toast.makeText(this, "Entry not found.", Toast.LENGTH_SHORT).show();
-            finish(); // Close activity if entry not found
+            Toast.makeText(this, "Entry not found in database.", Toast.LENGTH_SHORT).show();
+            Log.e("EntryDetailActivity", "Entry with ID " + entryId + " not found in database.");
+            setResult(RESULT_OK);
+            finish();
         }
     }
 
@@ -110,12 +150,19 @@ public class EntryDetailActivity extends AppCompatActivity {
 
     private void deleteEntry() {
         if (entryId != -1) {
-            dbHelper.deleteEntry(entryId);
-            Toast.makeText(this, "Entry deleted successfully!", Toast.LENGTH_SHORT).show();
-            setResult(RESULT_OK); // Indicate that an entry was deleted
-            finish(); // Go back to Dashboard
+            int rowsAffected = dbHelper.deleteEntry(entryId);
+            if (rowsAffected > 0) {
+                Toast.makeText(this, "Entry deleted successfully!", Toast.LENGTH_SHORT).show();
+                setResult(RESULT_OK);
+                finish();
+                Log.d("EntryDetailActivity", "Entry with ID " + entryId + " deleted successfully.");
+            } else {
+                Toast.makeText(this, "Error deleting entry or entry not found.", Toast.LENGTH_SHORT).show();
+                Log.e("EntryDetailActivity", "Failed to delete entry with ID: " + entryId);
+            }
         } else {
             Toast.makeText(this, "Error deleting entry: ID not found.", Toast.LENGTH_SHORT).show();
+            Log.e("EntryDetailActivity", "Attempted to delete entry with invalid ID: " + entryId);
         }
     }
 }
