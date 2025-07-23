@@ -11,6 +11,7 @@
         android:id="@+id/view_dark_background"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginTop="32dp"
         android:background="@drawable/lightblack"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,16 +24,14 @@
         android:layout_height="wrap_content"
         android:text="Entry Details"
         android:textColor="#FFFFFF"
-        android:textSize="30sp"
+        android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/card_entry_details"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.1"
+        app:layout_constraintHorizontal_bias="0.10"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="32dp"
-        app:layout_constraintVertical_bias="0.0"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toTopOf="@+id/view_dark_background"
+        app:layout_constraintVertical_bias="0.031" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/card_entry_details"
@@ -52,7 +51,7 @@
 
         <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="691dp"
             android:padding="16dp">
 
             <LinearLayout
@@ -102,10 +101,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:fontStyle="italic"
                     android:text="Quote: 'An inspirational quote related to the entry.'"
                     android:textColor="#B3FFFFFF"
-                    android:textSize="14sp"
-                    android:fontStyle="italic"/>
+                    android:textSize="14sp" />
 
             </LinearLayout>
         </ScrollView>

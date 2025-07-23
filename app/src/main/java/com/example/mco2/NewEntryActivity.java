@@ -43,7 +43,7 @@ public class NewEntryActivity extends AppCompatActivity {
         // Initialize UI elements
         etEntryTitle = findViewById(R.id.et_entry_title);
         etMoodLog = findViewById(R.id.et_mood_log2);
-        tvCurrentDate = findViewById(R.id.textView);
+        tvCurrentDate = findViewById(R.id.tvCurrentDate);
         btnSaveEntry = findViewById(R.id.activity_new_entry_btn_saveentry);
         btnSaveQuote = findViewById(R.id.activity_new_entry_btn_savequote); // Placeholder for quote button
 
@@ -69,7 +69,7 @@ public class NewEntryActivity extends AppCompatActivity {
             tvCurrentDate.setText("Today: " + existingEntry.getDate());
         } else {
             // For a new entry, display the current date and time
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.getDefault());
             String currentDateAndTime = sdf.format(new Date());
             tvCurrentDate.setText("Today: " + currentDateAndTime);
         }

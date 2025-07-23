@@ -7,10 +7,36 @@
     android:background="@drawable/gradient">
 
 
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="241dp"
+        android:layout_height="26dp"
+        android:text="Daily Quote"
+        android:textColor="#EFE5E5"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.242" />
+
+    <View
+        android:id="@+id/quote_view"
+        android:layout_width="370dp"
+        android:layout_height="54dp"
+        android:background="@drawable/rounded_transparent_white_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.487"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.234" />
+
     <View
         android:id="@+id/date_view2"
-        android:layout_width="368dp"
-        android:layout_height="80dp"
+        android:layout_width="370dp"
+        android:layout_height="54dp"
         android:background="@drawable/rounded_transparent_white_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -18,18 +44,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.154" />
-
-    <View
-        android:id="@+id/mood_view3"
-        android:layout_width="365dp"
-        android:layout_height="246dp"
-        android:background="@drawable/rounded_transparent_white_background"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.534"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.537" />
 
 
     <!-- Mood Emoji Buttons -->
@@ -48,10 +62,58 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
 
-        app:layout_constraintHorizontal_bias="0.528"
+        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.586" />
+        app:layout_constraintVertical_bias="0.671" />
+
+    <View
+        android:id="@+id/mood_view3"
+        android:layout_width="365dp"
+        android:layout_height="246dp"
+        android:background="@drawable/rounded_transparent_white_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.478"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.638" />
+
+    <EditText
+        android:id="@+id/et_entry_title"
+        android:layout_width="324dp"
+        android:layout_height="50dp"
+        android:background="@drawable/rounded_edittext_background"
+        android:hint="Give your entry a title..."
+        android:padding="13dp"
+        android:textColor="@android:color/white"
+        android:textColorHint="#B3FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.482"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.517" />
+
+    <TextView
+        android:id="@+id/mood_happy"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/mood_selector_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:text="😊"
+        android:textSize="28sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.681"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.385" />
 
     <View
         android:id="@+id/mood_view"
@@ -63,7 +125,7 @@
         app:layout_constraintHorizontal_bias="0.488"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.281" />
+        app:layout_constraintVertical_bias="0.353" />
 
     <TextView
         android:id="@+id/mood_angry"
@@ -81,7 +143,7 @@
         app:layout_constraintHorizontal_bias="0.126"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.305" />
+        app:layout_constraintVertical_bias="0.373" />
 
     <TextView
         android:id="@+id/mood_sad"
@@ -98,7 +160,7 @@
         app:layout_constraintHorizontal_bias="0.309"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.318" />
+        app:layout_constraintVertical_bias="0.385" />
 
     <TextView
         android:id="@+id/mood_neutral"
@@ -115,24 +177,23 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.318" />
+        app:layout_constraintVertical_bias="0.385" />
 
     <TextView
-        android:id="@+id/mood_happy"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:background="@drawable/mood_selector_background"
-        android:clickable="true"
-        android:focusable="true"
+        android:id="@+id/tv_mood_question"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="😊"
-        android:textSize="28sp"
+        android:text="How are you feeling?"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.681"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.318" />
+        app:layout_constraintVertical_bias="0.328" />
 
     <TextView
         android:id="@+id/mood_excited"
@@ -149,42 +210,7 @@
         app:layout_constraintHorizontal_bias="0.853"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.318" />
-
-    <TextView
-        android:id="@+id/tv_mood_question"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="How are you feeling?"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.264" />
-
-    <EditText
-        android:id="@+id/et_entry_title"
-        android:layout_width="324dp"
-        android:layout_height="50dp"
-        android:background="@drawable/rounded_edittext_background"
-        android:hint="Give your entry a title..."
-        android:padding="13dp"
-        android:textColor="@android:color/white"
-        android:textColorHint="#B3FFFFFF"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.517"
-
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.44" />
+        app:layout_constraintVertical_bias="0.385" />
 
     <Button
         android:id="@+id/activity_new_entry_btn_savequote"
@@ -200,18 +226,18 @@
         app:layout_constraintVertical_bias="0.906" />
 
     <TextView
-        android:id="@+id/textView"
-        android:layout_width="195dp"
-        android:layout_height="30dp"
-        android:text="Daily Quote"
+        android:id="@+id/tvCurrentDate"
+        android:layout_width="241dp"
+        android:layout_height="26dp"
+        android:text="Date"
         android:textColor="#EFE5E5"
         android:textSize="16sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.217"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.174" />
+        app:layout_constraintVertical_bias="0.165" />
 
     <TextView
         android:id="@+id/activity_new_entry_tv"
