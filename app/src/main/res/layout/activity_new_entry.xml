@@ -236,9 +236,10 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="@+id/date_view2"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.17"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/date_view2"
-        app:layout_constraintVertical_bias=".5" />
+        app:layout_constraintVertical_bias="0.529" />
 
     <TextView
         android:id="@+id/activity_new_entry_tv"

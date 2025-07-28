@@ -1,5 +1,5 @@
 // src/main/java/com/example/mco2/data/UserDbHelper.java
-package com.example.mco2.data;
+package com.example.mco2;
 
 import android.content.ContentValues;
 import android.content.Context;
