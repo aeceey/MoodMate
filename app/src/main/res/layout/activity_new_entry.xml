@@ -7,46 +7,46 @@
     android:background="@drawable/gradient">
 
 
+    <!-- Mood Emoji Buttons -->
+
     <TextView
-        android:id="@+id/textView2"
-        android:layout_width="241dp"
-        android:layout_height="26dp"
+        android:id="@+id/tvQuote"
+        android:layout_width="355dp"
+        android:layout_height="59dp"
         android:text="Daily Quote"
         android:textColor="#EFE5E5"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.242" />
+        app:layout_constraintBottom_toBottomOf="@+id/quote_view"
+        app:layout_constraintEnd_toEndOf="@+id/quote_view"
+        app:layout_constraintHorizontal_bias="0.625"
+        app:layout_constraintStart_toStartOf="@+id/quote_view"
+        app:layout_constraintTop_toTopOf="@+id/quote_view"
+        app:layout_constraintVertical_bias="0.434" />
 
     <View
         android:id="@+id/quote_view"
         android:layout_width="370dp"
-        android:layout_height="54dp"
-        android:background="@drawable/rounded_transparent_white_background"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.487"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.234" />
-
-    <View
-        android:id="@+id/date_view2"
-        android:layout_width="370dp"
-        android:layout_height="54dp"
+        android:layout_height="73dp"
         android:background="@drawable/rounded_transparent_white_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.488"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.154" />
+        app:layout_constraintVertical_bias="0.22" />
 
-
-    <!-- Mood Emoji Buttons -->
+    <View
+        android:id="@+id/date_view2"
+        android:layout_width="374dp"
+        android:layout_height="44dp"
+        android:background="@drawable/rounded_transparent_white_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.486"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.131" />
 
     <EditText
         android:id="@+id/et_mood_log2"
@@ -229,15 +229,16 @@
         android:id="@+id/tvCurrentDate"
         android:layout_width="241dp"
         android:layout_height="26dp"
+        android:layout_marginBottom="1dp"
         android:text="Date"
         android:textColor="#EFE5E5"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/date_view2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.165" />
+        app:layout_constraintTop_toTopOf="@+id/date_view2"
+        app:layout_constraintVertical_bias=".5" />
 
     <TextView
         android:id="@+id/activity_new_entry_tv"

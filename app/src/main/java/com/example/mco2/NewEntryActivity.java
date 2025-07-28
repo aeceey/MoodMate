@@ -1,7 +1,13 @@
 // src/main/java/com/example/mco2/NewEntryActivity.java
 package com.example.mco2;
 
-import android.content.Intent;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import java.util.List;
+
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -18,15 +24,20 @@ import java.util.Date;
 import java.util.Locale;
 
 public class NewEntryActivity extends AppCompatActivity {
+    private static final String BASE_URL = "https://zenquotes.io/api/";
+    private String currentQuote = "";
+    private Retrofit retrofit;
+    private ZenQuoteApi zenQuoteApi;
 
-    public static final String EXTRA_EDIT_ENTRY_ID = "edit_entry_id"; // Key for editing
+    public static final String EXTRA_EDIT_ENTRY_ID = "edit_entry_id";
 
     private EditText etEntryTitle;
     private EditText etMoodLog;
     private TextView tvCurrentDate;
     private TextView moodAngry, moodSad, moodNeutral, moodHappy, moodExcited;
+    private TextView quoteTextView;
     private Button btnSaveEntry;
-    private Button btnSaveQuote; // Assuming this button is for saving the daily quote
+    private Button btnSaveQuote;
 
     private String selectedMood = "";
     private JournalDbHelper dbHelper;
@@ -45,13 +56,15 @@ public class NewEntryActivity extends AppCompatActivity {
         etMoodLog = findViewById(R.id.et_mood_log2);
         tvCurrentDate = findViewById(R.id.tvCurrentDate);
         btnSaveEntry = findViewById(R.id.activity_new_entry_btn_saveentry);
-        btnSaveQuote = findViewById(R.id.activity_new_entry_btn_savequote); // Placeholder for quote button
+        btnSaveQuote = findViewById(R.id.activity_new_entry_btn_savequote);
 
         moodAngry = findViewById(R.id.mood_angry);
         moodSad = findViewById(R.id.mood_sad);
         moodNeutral = findViewById(R.id.mood_neutral);
         moodHappy = findViewById(R.id.mood_happy);
         moodExcited = findViewById(R.id.mood_excited);
+
+        quoteTextView = findViewById(R.id.tvQuote);
 
         // Check if we are editing an existing entry
         if (getIntent().hasExtra(EXTRA_EDIT_ENTRY_ID)) {
@@ -62,14 +75,13 @@ public class NewEntryActivity extends AppCompatActivity {
         }
 
         // Display current date if not editing or if no date is set for existing entry
-        // This part needs to be careful: if editing, it should show the existing entry's date.
-        // If creating new, it should show current date.
+
         if (existingEntry != null && existingEntry.getDate() != null && !existingEntry.getDate().isEmpty()) {
             // If editing an existing entry, display its date
             tvCurrentDate.setText("Today: " + existingEntry.getDate());
         } else {
             // For a new entry, display the current date and time
-            SimpleDateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy HH:mm:ss", Locale.getDefault());
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
             String currentDateAndTime = sdf.format(new Date());
             tvCurrentDate.setText("Today: " + currentDateAndTime);
         }
@@ -102,13 +114,28 @@ public class NewEntryActivity extends AppCompatActivity {
             }
         });
 
-        // (Optional) Set click listener for btnSaveQuote if it has functionality
+        // Set click listener for Save Quote button
         if (btnSaveQuote != null) {
             btnSaveQuote.setOnClickListener(v -> {
-                // Implement quote saving logic here, if any
-                Toast.makeText(NewEntryActivity.this, "Save Quote functionality (not yet implemented)", Toast.LENGTH_SHORT).show();
+                if (!currentQuote.isEmpty()) {
+                    // Update the current quote for this entry
+                    Toast.makeText(NewEntryActivity.this, "Quote saved for this entry!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(NewEntryActivity.this, "No quote available to save. Please wait for quote to load.", Toast.LENGTH_SHORT).show();
+                }
             });
         }
+
+        // Initialize Retrofit
+        retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        zenQuoteApi = retrofit.create(ZenQuoteApi.class);
+
+        // Fetches quote automatically when activity starts
+        fetchDailyQuote();
     }
 
     private void loadEntryForEditing(long entryId) {
@@ -142,7 +169,6 @@ public class NewEntryActivity extends AppCompatActivity {
     }
 
     private void resetMoodBackgrounds() {
-        // Ensure mood_selector_background is defined in your drawable folder
         moodAngry.setBackgroundResource(R.drawable.mood_selector_background);
         moodSad.setBackgroundResource(R.drawable.mood_selector_background);
         moodNeutral.setBackgroundResource(R.drawable.mood_selector_background);
@@ -153,9 +179,8 @@ public class NewEntryActivity extends AppCompatActivity {
     private void saveOrUpdateJournalEntry() {
         String title = etEntryTitle.getText().toString().trim();
         String content = etMoodLog.getText().toString().trim();
-        // Extracting date from TextView (ensure it includes "Today: " prefix to remove)
         String date = tvCurrentDate.getText().toString().replace("Today: ", "").trim();
-        String quote = "Placeholder Quote"; // Still a placeholder for now, you can make this editable
+        String quote = currentQuote.isEmpty() ? "No quote available" : currentQuote; // Use fetched quote
 
         if (content.isEmpty()) {
             Toast.makeText(this, "Journal entry cannot be empty!", Toast.LENGTH_SHORT).show();
@@ -171,8 +196,8 @@ public class NewEntryActivity extends AppCompatActivity {
             long newRowId = dbHelper.insertEntry(entry);
             if (newRowId != -1) {
                 Toast.makeText(this, "Entry saved successfully!", Toast.LENGTH_SHORT).show();
-                setResult(RESULT_OK); // Indicate success for Dashboard to refresh
-                finish(); // Go back to Dashboard
+                setResult(RESULT_OK);
+                finish();
             } else {
                 Toast.makeText(this, "Error saving entry.", Toast.LENGTH_SHORT).show();
             }
@@ -182,18 +207,54 @@ public class NewEntryActivity extends AppCompatActivity {
                 existingEntry.setMood(selectedMood);
                 existingEntry.setTitle(title);
                 existingEntry.setContent(content);
-                existingEntry.setQuote(quote); // Update quote if it can be changed, otherwise keep original
+                // Only update quote if user explicitly saved a new one
+                if (!currentQuote.isEmpty() && !currentQuote.equals("No quote available")) {
+                    existingEntry.setQuote(currentQuote);
+                }
 
                 int rowsAffected = dbHelper.updateEntry(existingEntry);
                 if (rowsAffected > 0) {
                     Toast.makeText(this, "Entry updated successfully!", Toast.LENGTH_SHORT).show();
-                    setResult(RESULT_OK); // Indicate that the entry was updated
-                    finish(); // Go back to EntryDetailActivity or Dashboard
+                    setResult(RESULT_OK);
+                    finish();
                 } else {
                     Toast.makeText(this, "Error updating entry.", Toast.LENGTH_SHORT).show();
                 }
             }
         }
+    }
+
+    private void fetchDailyQuote() {
+        Call<List<Quote>> call = zenQuoteApi.getTodayQuote();
+
+        call.enqueue(new Callback<List<Quote>>() {
+            @Override
+            public void onResponse(Call<List<Quote>> call, Response<List<Quote>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    Quote quote = response.body().get(0);
+                    currentQuote = quote.getFormattedQuote();
+
+                    // Update the UI with the fetched quote
+                    if (quoteTextView != null) {
+                        quoteTextView.setText(currentQuote);
+                    }
+                } else {
+                    currentQuote = "Failed to load today's quote";
+                    if (quoteTextView != null) {
+                        quoteTextView.setText(currentQuote);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<Quote>> call, Throwable t) {
+                currentQuote = "No internet connection - quote unavailable";
+                if (quoteTextView != null) {
+                    quoteTextView.setText(currentQuote);
+                }
+                Toast.makeText(NewEntryActivity.this, "Failed to fetch daily quote", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
