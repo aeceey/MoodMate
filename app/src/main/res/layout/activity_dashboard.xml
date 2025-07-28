@@ -12,7 +12,7 @@
         android:id="@+id/view_dark_square"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/lightblack"
+        android:background="@drawable/darkpurple"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,15 +23,18 @@
         android:id="@+id/tv_entries"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
         android:text="Entries"
         android:textColor="#FAF8F8"
         android:textSize="30sp"
-        android:layout_marginTop="32dp" app:layout_constraintBottom_toTopOf="@+id/recyclerViewEntries"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerViewEntries"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_chainStyle="packed" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewEntries"
