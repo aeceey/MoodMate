@@ -26,6 +26,7 @@ import java.util.Locale;
 public class NewEntryActivity extends AppCompatActivity {
     private static final String BASE_URL = "https://zenquotes.io/api/";
     private String currentQuote = "";
+    private boolean isQuoteSavedForEntry = false;
     private Retrofit retrofit;
     private ZenQuoteApi zenQuoteApi;
 
@@ -37,7 +38,7 @@ public class NewEntryActivity extends AppCompatActivity {
     private TextView moodAngry, moodSad, moodNeutral, moodHappy, moodExcited;
     private TextView quoteTextView;
     private Button btnSaveEntry;
-    private Button btnSaveQuote;
+    private Button btnSaveQuote; // Assuming this button is for saving the daily quote
 
     private String selectedMood = "";
     private JournalDbHelper dbHelper;
@@ -117,11 +118,11 @@ public class NewEntryActivity extends AppCompatActivity {
         // Set click listener for Save Quote button
         if (btnSaveQuote != null) {
             btnSaveQuote.setOnClickListener(v -> {
-                if (!currentQuote.isEmpty()) {
-                    // Update the current quote for this entry
+                if (!currentQuote.isEmpty() && !currentQuote.equals("No quote available") && !currentQuote.equals("Failed to load today's quote") && !currentQuote.equals("No internet connection - quote unavailable")) {
+                    isQuoteSavedForEntry = true; // Set the flag to true
                     Toast.makeText(NewEntryActivity.this, "Quote saved for this entry!", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(NewEntryActivity.this, "No quote available to save. Please wait for quote to load.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(NewEntryActivity.this, "No valid quote available to save.", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -180,7 +181,7 @@ public class NewEntryActivity extends AppCompatActivity {
         String title = etEntryTitle.getText().toString().trim();
         String content = etMoodLog.getText().toString().trim();
         String date = tvCurrentDate.getText().toString().replace("Today: ", "").trim();
-        String quote = currentQuote.isEmpty() ? "No quote available" : currentQuote; // Use fetched quote
+        String quoteToSave = isQuoteSavedForEntry ? currentQuote : "";
 
         if (content.isEmpty()) {
             Toast.makeText(this, "Journal entry cannot be empty!", Toast.LENGTH_SHORT).show();
@@ -192,7 +193,7 @@ public class NewEntryActivity extends AppCompatActivity {
         }
 
         if (entryIdToEdit == -1) { // This is a new entry
-            JournalEntry entry = new JournalEntry(date, selectedMood, title, content, quote);
+            JournalEntry entry = new JournalEntry(date, selectedMood, title, content, quoteToSave);
             long newRowId = dbHelper.insertEntry(entry);
             if (newRowId != -1) {
                 Toast.makeText(this, "Entry saved successfully!", Toast.LENGTH_SHORT).show();
@@ -208,8 +209,9 @@ public class NewEntryActivity extends AppCompatActivity {
                 existingEntry.setTitle(title);
                 existingEntry.setContent(content);
                 // Only update quote if user explicitly saved a new one
-                if (!currentQuote.isEmpty() && !currentQuote.equals("No quote available")) {
-                    existingEntry.setQuote(currentQuote);
+
+                if (isQuoteSavedForEntry) {
+                    existingEntry.setQuote(quoteToSave);
                 }
 
                 int rowsAffected = dbHelper.updateEntry(existingEntry);
@@ -233,6 +235,7 @@ public class NewEntryActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
                     Quote quote = response.body().get(0);
                     currentQuote = quote.getFormattedQuote();
+                    isQuoteSavedForEntry = false;
 
                     // Update the UI with the fetched quote
                     if (quoteTextView != null) {
