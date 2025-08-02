@@ -13,30 +13,32 @@ import com.example.mco2.model.JournalEntry;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.mco2.data.UserDbHelper;
+
 public class JournalDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "journal.db";
     private static final int DATABASE_VERSION = 1;
 
-    public static final String TABLE_ENTRIES = "journal_entries";
+    public static final String TABLE_JOURNAL = "journal_entries";
     public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_DATE = "date";
-    public static final String COLUMN_MOOD = "mood";
     public static final String COLUMN_TITLE = "title";
     public static final String COLUMN_CONTENT = "content";
+    public static final String COLUMN_DATE = "date";
+    public static final String COLUMN_MOOD = "mood";
     public static final String COLUMN_QUOTE = "quote";
+    public static final String COLUMN_USER_ID = "user_id";
 
-    private static final String SQL_CREATE_ENTRIES =
-            "CREATE TABLE " + TABLE_ENTRIES + " (" +
+    private static final String SQL_CREATE_JOURNAL =
+            "CREATE TABLE " + TABLE_JOURNAL + " (" +
                     COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    COLUMN_DATE + " TEXT NOT NULL," +
-                    COLUMN_MOOD + " TEXT," +
                     COLUMN_TITLE + " TEXT," +
                     COLUMN_CONTENT + " TEXT," +
-                    COLUMN_QUOTE + " TEXT)";
-
-    private static final String SQL_DELETE_ENTRIES =
-            "DROP TABLE IF EXISTS " + TABLE_ENTRIES;
+                    COLUMN_DATE + " TEXT NOT NULL," +
+                    COLUMN_MOOD + " TEXT," +
+                    COLUMN_QUOTE + " TEXT," +
+                    COLUMN_USER_ID + " INTEGER NOT NULL" +
+                    ")"; // Removed foreign key constraint for now
 
     public JournalDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -44,204 +46,241 @@ public class JournalDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(SQL_CREATE_ENTRIES);
-        Log.d("JournalDbHelper", "Database created: " + TABLE_ENTRIES);
+        // Enable foreign key constraints
+        db.execSQL("PRAGMA foreign_keys=ON");
+
+        // Create the journal table
+        db.execSQL(SQL_CREATE_JOURNAL);
+        Log.d("JournalDbHelper", "Journal database created: " + TABLE_JOURNAL);
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        // Enable foreign key constraints every time database is opened
+        db.execSQL("PRAGMA foreign_keys=ON");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL(SQL_DELETE_ENTRIES);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_JOURNAL);
         onCreate(db);
-        Log.d("JournalDbHelper", "Database upgraded from version " + oldVersion + " to " + newVersion);
+        Log.d("JournalDbHelper", "Journal database upgraded from " + oldVersion + " to " + newVersion);
     }
 
-    /**
-     * Inserts a new journal entry into the database.
-     * @param entry The JournalEntry object to insert.
-     * @return The row ID of the newly inserted row, or -1 if an error occurred.
-     */
     public long insertEntry(JournalEntry entry) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_DATE, entry.getDate());
-        values.put(COLUMN_MOOD, entry.getMood());
-        values.put(COLUMN_TITLE, entry.getTitle());
-        values.put(COLUMN_CONTENT, entry.getContent());
-        values.put(COLUMN_QUOTE, entry.getQuote());
+        SQLiteDatabase db = null;
+        long newRowId = -1;
 
-        long newRowId = db.insert(TABLE_ENTRIES, null, values);
-        db.close();
-        Log.d("JournalDbHelper", "Inserted entry with ID: " + newRowId);
+        try {
+            db = this.getWritableDatabase();
+
+            // Validate that all required fields are present
+            if (entry.getUserId() <= 0) {
+                Log.e("JournalDbHelper", "Invalid user ID: " + entry.getUserId());
+                return -1;
+            }
+
+            if (entry.getDate() == null || entry.getDate().trim().isEmpty()) {
+                Log.e("JournalDbHelper", "Date is required but not provided");
+                return -1;
+            }
+
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_USER_ID, entry.getUserId());
+            values.put(COLUMN_TITLE, entry.getTitle() != null ? entry.getTitle() : "");
+            values.put(COLUMN_CONTENT, entry.getContent() != null ? entry.getContent() : "");
+            values.put(COLUMN_DATE, entry.getDate());
+            values.put(COLUMN_MOOD, entry.getMood() != null ? entry.getMood() : "");
+            values.put(COLUMN_QUOTE, entry.getQuote() != null ? entry.getQuote() : "");
+
+            newRowId = db.insert(TABLE_JOURNAL, null, values);
+
+            if (newRowId == -1) {
+                Log.e("JournalDbHelper", "Failed to insert journal entry");
+            } else {
+                Log.d("JournalDbHelper", "Successfully inserted journal entry with ID: " + newRowId);
+            }
+
+        } catch (Exception e) {
+            Log.e("JournalDbHelper", "Error inserting journal entry", e);
+            newRowId = -1;
+        } finally {
+            if (db != null) {
+                db.close();
+            }
+        }
+
         return newRowId;
     }
 
-    /**
-     * Retrieves a journal entry by its ID.
-     * @param id The ID of the entry to retrieve.
-     * @return The JournalEntry object if found, otherwise null.
-     */
-    public JournalEntry getEntryById(long id) {
-        SQLiteDatabase db = this.getReadableDatabase();
+    public List<JournalEntry> getAllEntries(long userId) {
+        List<JournalEntry> entries = new ArrayList<>();
+        SQLiteDatabase db = null;
         Cursor cursor = null;
-        JournalEntry entry = null;
-        Log.d("JournalDbHelper", "Attempting to retrieve entry with ID: " + id); // New Log
 
         try {
+            db = this.getReadableDatabase();
             cursor = db.query(
-                    TABLE_ENTRIES,
-                    new String[]{COLUMN_ID, COLUMN_DATE, COLUMN_MOOD, COLUMN_TITLE, COLUMN_CONTENT, COLUMN_QUOTE},
-                    COLUMN_ID + "=?",
-                    new String[]{String.valueOf(id)},
-                    null, null, null, null
+                    TABLE_JOURNAL,
+                    null,
+                    COLUMN_USER_ID + " = ?",
+                    new String[]{String.valueOf(userId)},
+                    null, null, COLUMN_DATE + " DESC"
             );
 
-            if (cursor != null) {
-                Log.d("JournalDbHelper", "Cursor returned with count: " + cursor.getCount()); // New Log
-                if (cursor.moveToFirst()) {
-                    entry = new JournalEntry();
-                    int idIndex = cursor.getColumnIndex(COLUMN_ID);
-                    if (idIndex != -1) entry.setId(cursor.getLong(idIndex));
-                    else Log.e("JournalDbHelper", "COLUMN_ID not found in cursor."); // New Log
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    int idIndex = cursor.getColumnIndexOrThrow(COLUMN_ID);
+                    int titleIndex = cursor.getColumnIndexOrThrow(COLUMN_TITLE);
+                    int contentIndex = cursor.getColumnIndexOrThrow(COLUMN_CONTENT);
+                    int dateIndex = cursor.getColumnIndexOrThrow(COLUMN_DATE);
+                    int moodIndex = cursor.getColumnIndexOrThrow(COLUMN_MOOD);
+                    int quoteIndex = cursor.getColumnIndexOrThrow(COLUMN_QUOTE);
+                    int userIdIndex = cursor.getColumnIndexOrThrow(COLUMN_USER_ID);
 
-                    int dateIndex = cursor.getColumnIndex(COLUMN_DATE);
-                    if (dateIndex != -1) entry.setDate(cursor.getString(dateIndex));
-                    else Log.e("JournalDbHelper", "COLUMN_DATE not found in cursor."); // New Log
+                    JournalEntry entry = new JournalEntry();
+                    entry.setId(cursor.getLong(idIndex));
+                    entry.setTitle(cursor.getString(titleIndex));
+                    entry.setContent(cursor.getString(contentIndex));
+                    entry.setDate(cursor.getString(dateIndex));
+                    entry.setMood(cursor.getString(moodIndex));
+                    entry.setQuote(cursor.getString(quoteIndex));
+                    entry.setUserId(cursor.getLong(userIdIndex));
 
-                    int moodIndex = cursor.getColumnIndex(COLUMN_MOOD);
-                    if (moodIndex != -1) entry.setMood(cursor.getString(moodIndex));
-                    else Log.e("JournalDbHelper", "COLUMN_MOOD not found in cursor."); // New Log
-
-                    int titleIndex = cursor.getColumnIndex(COLUMN_TITLE);
-                    if (titleIndex != -1) entry.setTitle(cursor.getString(titleIndex));
-                    else Log.e("JournalDbHelper", "COLUMN_TITLE not found in cursor."); // New Log
-
-                    int contentIndex = cursor.getColumnIndex(COLUMN_CONTENT);
-                    if (contentIndex != -1) entry.setContent(cursor.getString(contentIndex));
-                    else Log.e("JournalDbHelper", "COLUMN_CONTENT not found in cursor."); // New Log
-
-                    int quoteIndex = cursor.getColumnIndex(COLUMN_QUOTE);
-                    if (quoteIndex != -1) entry.setQuote(cursor.getString(quoteIndex));
-                    else Log.e("JournalDbHelper", "COLUMN_QUOTE not found in cursor."); // New Log
-
-                    Log.d("JournalDbHelper", "Successfully retrieved entry: " + entry.getTitle() + " (ID: " + entry.getId() + ")"); // New Log
-                } else {
-                    Log.w("JournalDbHelper", "No entry found for ID: " + id + ". Cursor is empty."); // New Log
-                }
-            } else {
-                Log.e("JournalDbHelper", "Cursor is null for ID: " + id); // New Log
+                    entries.add(entry);
+                } while (cursor.moveToNext());
             }
         } catch (Exception e) {
-            Log.e("JournalDbHelper", "Error getting entry by ID: " + id, e);
+            Log.e("JournalDbHelper", "Error getting all entries for user: " + userId, e);
         } finally {
             if (cursor != null) {
                 cursor.close();
             }
-            db.close();
-            Log.d("JournalDbHelper", "Database connection closed."); // New Log
+            if (db != null) {
+                db.close();
+            }
+        }
+        return entries;
+    }
+
+    public JournalEntry getEntryById(long entryId, long userId) {
+        SQLiteDatabase db = null;
+        Cursor cursor = null;
+        JournalEntry entry = null;
+
+        try {
+            db = this.getReadableDatabase();
+
+            String[] projection = {
+                    COLUMN_ID,
+                    COLUMN_USER_ID,
+                    COLUMN_TITLE,
+                    COLUMN_CONTENT,
+                    COLUMN_DATE,
+                    COLUMN_MOOD,
+                    COLUMN_QUOTE
+            };
+
+            String selection = COLUMN_ID + " = ? AND " + COLUMN_USER_ID + " = ?";
+            String[] selectionArgs = {String.valueOf(entryId), String.valueOf(userId)};
+
+            cursor = db.query(
+                    TABLE_JOURNAL,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null
+            );
+
+            if (cursor != null && cursor.moveToFirst()) {
+                long id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_ID));
+                long entryUserId = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_USER_ID));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE));
+                String content = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT));
+                String date = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DATE));
+                String mood = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MOOD));
+                String quote = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_QUOTE));
+
+                entry = new JournalEntry(id, entryUserId, date, mood, title, content, quote);
+            }
+        } catch (Exception e) {
+            Log.e("JournalDbHelper", "Error getting entry by ID: " + entryId, e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            if (db != null) {
+                db.close();
+            }
         }
         return entry;
     }
 
-    /**
-     * Retrieves all journal entries from the database.
-     * @return A list of all JournalEntry objects.
-     */
-    public List<JournalEntry> getAllEntries() {
-        List<JournalEntry> entryList = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = null;
-        Log.d("JournalDbHelper", "Attempting to retrieve all entries."); // New Log
+    public int updateEntry(JournalEntry entry) {
+        SQLiteDatabase db = null;
+        int count = 0;
 
         try {
-            String selectQuery = "SELECT * FROM " + TABLE_ENTRIES + " ORDER BY " + COLUMN_DATE + " DESC";
-            cursor = db.rawQuery(selectQuery, null);
+            db = this.getWritableDatabase();
 
-            if (cursor != null) {
-                Log.d("JournalDbHelper", "All entries cursor count: " + cursor.getCount()); // New Log
-                if (cursor.moveToFirst()) {
-                    do {
-                        JournalEntry entry = new JournalEntry();
-                        int idIndex = cursor.getColumnIndex(COLUMN_ID);
-                        if (idIndex != -1) entry.setId(cursor.getLong(idIndex));
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_TITLE, entry.getTitle() != null ? entry.getTitle() : "");
+            values.put(COLUMN_CONTENT, entry.getContent() != null ? entry.getContent() : "");
+            values.put(COLUMN_DATE, entry.getDate());
+            values.put(COLUMN_MOOD, entry.getMood() != null ? entry.getMood() : "");
+            values.put(COLUMN_QUOTE, entry.getQuote() != null ? entry.getQuote() : "");
 
-                        int dateIndex = cursor.getColumnIndex(COLUMN_DATE);
-                        if (dateIndex != -1) entry.setDate(cursor.getString(dateIndex));
+            String selection = COLUMN_ID + " = ? AND " + COLUMN_USER_ID + " = ?";
+            String[] selectionArgs = {String.valueOf(entry.getId()), String.valueOf(entry.getUserId())};
 
-                        int moodIndex = cursor.getColumnIndex(COLUMN_MOOD);
-                        if (moodIndex != -1) entry.setMood(cursor.getString(moodIndex));
+            count = db.update(TABLE_JOURNAL, values, selection, selectionArgs);
 
-                        int titleIndex = cursor.getColumnIndex(COLUMN_TITLE);
-                        if (titleIndex != -1) entry.setTitle(cursor.getString(titleIndex));
-
-                        int contentIndex = cursor.getColumnIndex(COLUMN_CONTENT);
-                        if (contentIndex != -1) entry.setContent(cursor.getString(contentIndex));
-
-                        int quoteIndex = cursor.getColumnIndex(COLUMN_QUOTE);
-                        if (quoteIndex != -1) entry.setQuote(cursor.getString(quoteIndex));
-
-                        entryList.add(entry);
-                    } while (cursor.moveToNext());
-                } else {
-                    Log.w("JournalDbHelper", "No entries found in database."); // New Log
-                }
+            if (count > 0) {
+                Log.d("JournalDbHelper", "Successfully updated entry with ID: " + entry.getId());
             } else {
-                Log.e("JournalDbHelper", "Cursor is null for getAllEntries query."); // New Log
+                Log.w("JournalDbHelper", "No rows updated for entry ID: " + entry.getId());
             }
+
         } catch (Exception e) {
-            Log.e("JournalDbHelper", "Error getting all entries: ", e);
-            entryList.clear(); // Clear the list on error to avoid partial data
+            Log.e("JournalDbHelper", "Error updating entry with ID: " + entry.getId(), e);
         } finally {
-            if (cursor != null) {
-                cursor.close();
+            if (db != null) {
+                db.close();
             }
-            db.close();
-            Log.d("JournalDbHelper", "Database connection closed for getAllEntries."); // New Log
         }
-        return entryList;
+
+        return count;
     }
 
-    /**
-     * Updates an existing journal entry in the database.
-     * @param entry The JournalEntry object with updated data.
-     * @return The number of rows affected.
-     */
-    public int updateEntry(JournalEntry entry) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_DATE, entry.getDate());
-        values.put(COLUMN_MOOD, entry.getMood());
-        values.put(COLUMN_TITLE, entry.getTitle());
-        values.put(COLUMN_CONTENT, entry.getContent());
-        values.put(COLUMN_QUOTE, entry.getQuote());
+    public int deleteEntry(long entryId, long userId) {
+        SQLiteDatabase db = null;
+        int rowsAffected = 0;
 
-        int rowsAffected = db.update(TABLE_ENTRIES, values, COLUMN_ID + " = ?",
-                new String[]{String.valueOf(entry.getId())});
-        db.close();
-        Log.d("JournalDbHelper", "Updated entry with ID: " + entry.getId() + ", Rows affected: " + rowsAffected);
+        try {
+            db = this.getWritableDatabase();
+            rowsAffected = db.delete(
+                    TABLE_JOURNAL,
+                    COLUMN_ID + "=? AND " + COLUMN_USER_ID + "=?",
+                    new String[]{String.valueOf(entryId), String.valueOf(userId)}
+            );
+
+            if (rowsAffected > 0) {
+                Log.d("JournalDbHelper", "Successfully deleted entry with ID: " + entryId);
+            } else {
+                Log.w("JournalDbHelper", "No rows deleted for entry ID: " + entryId);
+            }
+
+        } catch (Exception e) {
+            Log.e("JournalDbHelper", "Error deleting entry with ID: " + entryId, e);
+        } finally {
+            if (db != null) {
+                db.close();
+            }
+        }
+
         return rowsAffected;
-    }
-
-    /**
-     * Deletes a journal entry from the database.
-     * @param id The ID of the entry to delete.
-     * @return The number of rows affected.
-     */
-    public int deleteEntry(long id) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        int rowsAffected = db.delete(TABLE_ENTRIES, COLUMN_ID + " = ?",
-                new String[]{String.valueOf(id)});
-        db.close();
-        Log.d("JournalDbHelper", "Deleted entry with ID: " + id + ", Rows affected: " + rowsAffected);
-        return rowsAffected;
-    }
-
-    /**
-     * Deletes all journal entries from the database.
-     */
-    public void deleteAllEntries() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        int rowsAffected = db.delete(TABLE_ENTRIES, null, null);
-        db.close();
-        Log.d("JournalDbHelper", "Deleted all entries. Rows affected: " + rowsAffected);
     }
 }

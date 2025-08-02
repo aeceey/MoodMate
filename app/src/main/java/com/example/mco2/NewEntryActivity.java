@@ -7,7 +7,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import java.util.List;
-
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -15,10 +14,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.mco2.data.JournalDbHelper;
 import com.example.mco2.model.JournalEntry;
-
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import android.util.Log;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -38,12 +39,13 @@ public class NewEntryActivity extends AppCompatActivity {
     private TextView moodAngry, moodSad, moodNeutral, moodHappy, moodExcited;
     private TextView quoteTextView;
     private Button btnSaveEntry;
-    private Button btnSaveQuote; // Assuming this button is for saving the daily quote
+    private Button btnSaveQuote;
 
     private String selectedMood = "";
     private JournalDbHelper dbHelper;
-    private long entryIdToEdit = -1; // To store the ID of the entry being edited
-    private JournalEntry existingEntry = null; // To hold the existing entry data
+    private long entryIdToEdit = -1;
+    private JournalEntry existingEntry = null;
+    private long currentUserId; // New: field to hold the user's ID
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +54,14 @@ public class NewEntryActivity extends AppCompatActivity {
 
         dbHelper = new JournalDbHelper(this);
 
-        // Initialize UI elements
+        // Get the current user ID from the intent
+        currentUserId = getIntent().getLongExtra("CURRENT_USER_ID", -1);
+        if (currentUserId == -1) {
+            Toast.makeText(this, "Error: User not logged in.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         etEntryTitle = findViewById(R.id.et_entry_title);
         etMoodLog = findViewById(R.id.et_mood_log2);
         tvCurrentDate = findViewById(R.id.tvCurrentDate);
@@ -67,7 +76,6 @@ public class NewEntryActivity extends AppCompatActivity {
 
         quoteTextView = findViewById(R.id.tvQuote);
 
-        // Check if we are editing an existing entry
         if (getIntent().hasExtra(EXTRA_EDIT_ENTRY_ID)) {
             entryIdToEdit = getIntent().getLongExtra(EXTRA_EDIT_ENTRY_ID, -1);
             if (entryIdToEdit != -1) {
@@ -75,30 +83,20 @@ public class NewEntryActivity extends AppCompatActivity {
             }
         }
 
-        // Display current date if not editing or if no date is set for existing entry
-
         if (existingEntry != null && existingEntry.getDate() != null && !existingEntry.getDate().isEmpty()) {
-            // If editing an existing entry, display its date
             tvCurrentDate.setText("Today: " + existingEntry.getDate());
         } else {
-            // For a new entry, display the current date and time
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
             String currentDateAndTime = sdf.format(new Date());
             tvCurrentDate.setText("Today: " + currentDateAndTime);
         }
 
-
-        // Set click listeners for mood emojis
-        View.OnClickListener moodClickListener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                resetMoodBackgrounds();
-                TextView clickedMood = (TextView) v;
-                selectedMood = clickedMood.getText().toString();
-                // Apply the selected background, assuming mood_selector_background_selected is defined
-                clickedMood.setBackgroundResource(R.drawable.mood_selector_background_selected);
-                Toast.makeText(NewEntryActivity.this, "Mood selected: " + selectedMood, Toast.LENGTH_SHORT).show();
-            }
+        View.OnClickListener moodClickListener = v -> {
+            resetMoodBackgrounds();
+            TextView clickedMood = (TextView) v;
+            selectedMood = clickedMood.getText().toString();
+            clickedMood.setBackgroundResource(R.drawable.mood_selector_background_selected);
+            Toast.makeText(NewEntryActivity.this, "Mood selected: " + selectedMood, Toast.LENGTH_SHORT).show();
         };
 
         moodAngry.setOnClickListener(moodClickListener);
@@ -107,19 +105,12 @@ public class NewEntryActivity extends AppCompatActivity {
         moodHappy.setOnClickListener(moodClickListener);
         moodExcited.setOnClickListener(moodClickListener);
 
-        // Set click listener for Save Entry button
-        btnSaveEntry.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveOrUpdateJournalEntry();
-            }
-        });
+        btnSaveEntry.setOnClickListener(v -> saveOrUpdateJournalEntry());
 
-        // Set click listener for Save Quote button
         if (btnSaveQuote != null) {
             btnSaveQuote.setOnClickListener(v -> {
                 if (!currentQuote.isEmpty() && !currentQuote.equals("No quote available") && !currentQuote.equals("Failed to load today's quote") && !currentQuote.equals("No internet connection - quote unavailable")) {
-                    isQuoteSavedForEntry = true; // Set the flag to true
+                    isQuoteSavedForEntry = true;
                     Toast.makeText(NewEntryActivity.this, "Quote saved for this entry!", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(NewEntryActivity.this, "No valid quote available to save.", Toast.LENGTH_SHORT).show();
@@ -127,7 +118,6 @@ public class NewEntryActivity extends AppCompatActivity {
             });
         }
 
-        // Initialize Retrofit
         retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -135,27 +125,26 @@ public class NewEntryActivity extends AppCompatActivity {
 
         zenQuoteApi = retrofit.create(ZenQuoteApi.class);
 
-        // Fetches quote automatically when activity starts
         fetchDailyQuote();
     }
 
     private void loadEntryForEditing(long entryId) {
-        existingEntry = dbHelper.getEntryById(entryId);
+        // Use the new getEntryById method that requires the user ID
+        existingEntry = dbHelper.getEntryById(entryId, currentUserId);
         if (existingEntry != null) {
             etEntryTitle.setText(existingEntry.getTitle());
             etMoodLog.setText(existingEntry.getContent());
-            // Date is handled in onCreate based on existingEntry status
             selectedMood = existingEntry.getMood();
-            highlightSelectedMood(selectedMood); // Highlight the mood if set
+            highlightSelectedMood(selectedMood);
         } else {
             Toast.makeText(this, "Failed to load entry for editing.", Toast.LENGTH_SHORT).show();
-            entryIdToEdit = -1; // Reset to ensure it's treated as a new entry if loading fails
+            entryIdToEdit = -1;
+            finish(); // Exit if we can't load the entry
         }
     }
 
     private void highlightSelectedMood(String mood) {
-        resetMoodBackgrounds(); // First, reset all backgrounds to default
-        // Then, apply the selected background to the appropriate TextView
+        resetMoodBackgrounds();
         if (moodAngry.getText().toString().equals(mood)) {
             moodAngry.setBackgroundResource(R.drawable.mood_selector_background_selected);
         } else if (moodSad.getText().toString().equals(mood)) {
@@ -180,55 +169,93 @@ public class NewEntryActivity extends AppCompatActivity {
     private void saveOrUpdateJournalEntry() {
         String title = etEntryTitle.getText().toString().trim();
         String content = etMoodLog.getText().toString().trim();
-        String date = tvCurrentDate.getText().toString().replace("Today: ", "").trim();
         String quoteToSave = isQuoteSavedForEntry ? currentQuote : "";
+
+        // Debug logging
+        Log.d("NewEntryActivity", "=== SAVE ENTRY DEBUG ===");
+        Log.d("NewEntryActivity", "Title: " + title);
+        Log.d("NewEntryActivity", "Content: " + content);
+        Log.d("NewEntryActivity", "Selected Mood: " + selectedMood);
+        Log.d("NewEntryActivity", "Quote to save: " + quoteToSave);
+        Log.d("NewEntryActivity", "Current User ID: " + currentUserId);
+        Log.d("NewEntryActivity", "Entry ID to edit: " + entryIdToEdit);
 
         if (content.isEmpty()) {
             Toast.makeText(this, "Journal entry cannot be empty!", Toast.LENGTH_SHORT).show();
+            Log.w("NewEntryActivity", "Validation failed: content is empty");
             return;
         }
         if (selectedMood.isEmpty()) {
             Toast.makeText(this, "Please select a mood!", Toast.LENGTH_SHORT).show();
+            Log.w("NewEntryActivity", "Validation failed: mood not selected");
             return;
         }
 
+        String dateToSave;
+        if (entryIdToEdit == -1) { // New entry
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            dateToSave = sdf.format(new Date());
+            Log.d("NewEntryActivity", "Creating new entry with date: " + dateToSave);
+        } else { // Existing entry
+            if (existingEntry != null) {
+                dateToSave = existingEntry.getDate();
+                Log.d("NewEntryActivity", "Updating existing entry with date: " + dateToSave);
+            } else {
+                Toast.makeText(this, "Error: Existing entry not found.", Toast.LENGTH_SHORT).show();
+                Log.e("NewEntryActivity", "existingEntry is null for edit operation");
+                return;
+            }
+        }
+
         if (entryIdToEdit == -1) { // This is a new entry
-            JournalEntry entry = new JournalEntry(date, selectedMood, title, content, quoteToSave);
+            JournalEntry entry = new JournalEntry(currentUserId, dateToSave, selectedMood, title, content, quoteToSave);
+
+            // Additional debug logging for the entry object
+            Log.d("NewEntryActivity", "Created entry object:");
+            Log.d("NewEntryActivity", "  - User ID: " + entry.getUserId());
+            Log.d("NewEntryActivity", "  - Date: " + entry.getDate());
+            Log.d("NewEntryActivity", "  - Mood: " + entry.getMood());
+            Log.d("NewEntryActivity", "  - Title: " + entry.getTitle());
+            Log.d("NewEntryActivity", "  - Content: " + entry.getContent());
+            Log.d("NewEntryActivity", "  - Quote: " + entry.getQuote());
+
             long newRowId = dbHelper.insertEntry(entry);
+            Log.d("NewEntryActivity", "Insert result: " + newRowId);
+
             if (newRowId != -1) {
-                Toast.makeText(this, "Entry saved successfully!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Entry saved successfully! ID: " + newRowId, Toast.LENGTH_SHORT).show();
                 setResult(RESULT_OK);
                 finish();
             } else {
-                Toast.makeText(this, "Error saving entry.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error saving entry. Check logs for details.", Toast.LENGTH_LONG).show();
+                Log.e("NewEntryActivity", "Failed to save entry - insertEntry returned -1");
             }
         } else { // This is an existing entry to update
             if (existingEntry != null) {
-                existingEntry.setDate(date);
+                existingEntry.setDate(dateToSave);
                 existingEntry.setMood(selectedMood);
                 existingEntry.setTitle(title);
                 existingEntry.setContent(content);
-                // Only update quote if user explicitly saved a new one
+                existingEntry.setQuote(quoteToSave);
 
-                if (isQuoteSavedForEntry) {
-                    existingEntry.setQuote(quoteToSave);
-                }
+                Log.d("NewEntryActivity", "Updating entry with ID: " + existingEntry.getId());
 
                 int rowsAffected = dbHelper.updateEntry(existingEntry);
+                Log.d("NewEntryActivity", "Update result: " + rowsAffected + " rows affected");
+
                 if (rowsAffected > 0) {
                     Toast.makeText(this, "Entry updated successfully!", Toast.LENGTH_SHORT).show();
                     setResult(RESULT_OK);
                     finish();
                 } else {
-                    Toast.makeText(this, "Error updating entry.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Error updating entry. Check logs for details.", Toast.LENGTH_LONG).show();
+                    Log.e("NewEntryActivity", "Failed to update entry - no rows affected");
                 }
             }
         }
     }
-
     private void fetchDailyQuote() {
         Call<List<Quote>> call = zenQuoteApi.getTodayQuote();
-
         call.enqueue(new Callback<List<Quote>>() {
             @Override
             public void onResponse(Call<List<Quote>> call, Response<List<Quote>> response) {
@@ -236,8 +263,6 @@ public class NewEntryActivity extends AppCompatActivity {
                     Quote quote = response.body().get(0);
                     currentQuote = quote.getFormattedQuote();
                     isQuoteSavedForEntry = false;
-
-                    // Update the UI with the fetched quote
                     if (quoteTextView != null) {
                         quoteTextView.setText(currentQuote);
                     }

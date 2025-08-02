@@ -8,10 +8,8 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.mco2.data.JournalDbHelper;
 import com.example.mco2.model.JournalEntry;
 
@@ -19,6 +17,7 @@ public class EntryDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_ENTRY_ID = "entry_id";
     private long entryId = -1;
+    private long currentUserId; // New: field to hold the user's ID
     private JournalDbHelper dbHelper;
     private JournalEntry currentEntry;
 
@@ -34,7 +33,14 @@ public class EntryDetailActivity extends AppCompatActivity {
 
         dbHelper = new JournalDbHelper(this);
 
-        // Initialize UI elements and add null checks immediately
+        // Get the user ID from the intent
+        currentUserId = getIntent().getLongExtra("CURRENT_USER_ID", -1);
+        if (currentUserId == -1) {
+            Toast.makeText(this, "Error: User not logged in.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         tvDetailDate = findViewById(R.id.tv_detail_date);
         if (tvDetailDate == null) Log.e("EntryDetailActivity", "tvDetailDate is null. Check activity_entry_detail.xml for @id/tv_detail_date");
         tvDetailMood = findViewById(R.id.tv_detail_mood);
@@ -51,13 +57,11 @@ public class EntryDetailActivity extends AppCompatActivity {
         btnDeleteEntry = findViewById(R.id.btn_delete_entry);
         if (btnDeleteEntry == null) Log.e("EntryDetailActivity", "btnDeleteEntry is null. Check activity_entry_detail.xml for @id/btn_delete_entry");
 
-
-        // Get entry ID from Intent
         if (getIntent().hasExtra(EXTRA_ENTRY_ID)) {
             entryId = getIntent().getLongExtra(EXTRA_ENTRY_ID, -1);
             Log.d("EntryDetailActivity", "Received entry ID: " + entryId);
             if (entryId != -1) {
-                loadEntryDetails(); // Initial load of entry details
+                loadEntryDetails();
             } else {
                 Toast.makeText(this, "Error: Invalid entry ID provided.", Toast.LENGTH_SHORT).show();
                 Log.e("EntryDetailActivity", "Invalid entry ID: " + entryId);
@@ -69,12 +73,12 @@ public class EntryDetailActivity extends AppCompatActivity {
             finish();
         }
 
-        // Set click listeners for buttons (only if buttons are found)
         if (btnEditEntry != null) {
             btnEditEntry.setOnClickListener(v -> {
                 if (currentEntry != null && entryId != -1) {
                     Intent intent = new Intent(EntryDetailActivity.this, NewEntryActivity.class);
                     intent.putExtra(NewEntryActivity.EXTRA_EDIT_ENTRY_ID, entryId);
+                    intent.putExtra("CURRENT_USER_ID", currentUserId); // Pass user ID
                     startActivityForResult(intent, EDIT_ENTRY_REQUEST_CODE);
                     Log.d("EntryDetailActivity", "Launching NewEntryActivity for editing ID: " + entryId);
                 } else {
@@ -92,10 +96,10 @@ public class EntryDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (entryId != -1) {
+        if (entryId != -1 && currentUserId != -1) {
             loadEntryDetails();
         } else {
-            Log.w("EntryDetailActivity", "onResume: entryId is invalid, finishing activity.");
+            Log.w("EntryDetailActivity", "onResume: entryId or userId is invalid, finishing activity.");
             finish();
         }
     }
@@ -107,7 +111,7 @@ public class EntryDetailActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 Log.d("EntryDetailActivity", "Returned from NewEntryActivity with RESULT_OK. Refreshing details.");
                 loadEntryDetails();
-                setResult(RESULT_OK); // Signal to Dashboard that something might have changed
+                setResult(RESULT_OK);
             } else {
                 Log.d("EntryDetailActivity", "Returned from NewEntryActivity with non-OK result.");
             }
@@ -115,20 +119,19 @@ public class EntryDetailActivity extends AppCompatActivity {
     }
 
     private void loadEntryDetails() {
-        currentEntry = dbHelper.getEntryById(entryId);
+        // Use the new getEntryById method with the user ID
+        currentEntry = dbHelper.getEntryById(entryId, currentUserId);
 
         if (currentEntry != null) {
-            // Check if TextViews are not null before setting text
             if (tvDetailDate != null) tvDetailDate.setText("Date: " + currentEntry.getDate());
             if (tvDetailMood != null) tvDetailMood.setText("Mood: " + currentEntry.getMood());
             if (tvDetailTitle != null) tvDetailTitle.setText(currentEntry.getTitle().isEmpty() ? "No Title" : currentEntry.getTitle());
             if (tvDetailContent != null) tvDetailContent.setText(currentEntry.getContent());
             if (tvDetailQuote != null) tvDetailQuote.setText("Quote: " + (currentEntry.getQuote().isEmpty() ? "N/A" : currentEntry.getQuote()));
-
             Log.d("EntryDetailActivity", "Entry details loaded for ID: " + entryId + ", Title: " + currentEntry.getTitle());
         } else {
             Toast.makeText(this, "Entry not found in database.", Toast.LENGTH_SHORT).show();
-            Log.e("EntryDetailActivity", "Entry with ID " + entryId + " not found in database.");
+            Log.e("EntryDetailActivity", "Entry with ID " + entryId + " for user " + currentUserId + " not found.");
             setResult(RESULT_OK);
             finish();
         }
@@ -138,11 +141,7 @@ public class EntryDetailActivity extends AppCompatActivity {
         new AlertDialog.Builder(this)
                 .setTitle("Delete Entry")
                 .setMessage("Are you sure you want to permanently delete this journal entry?")
-                .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        deleteEntry();
-                    }
-                })
+                .setPositiveButton("Delete", (dialog, which) -> deleteEntry())
                 .setNegativeButton("Cancel", null)
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .show();
@@ -150,7 +149,8 @@ public class EntryDetailActivity extends AppCompatActivity {
 
     private void deleteEntry() {
         if (entryId != -1) {
-            int rowsAffected = dbHelper.deleteEntry(entryId);
+            // Use the new deleteEntry method with the user ID
+            int rowsAffected = dbHelper.deleteEntry(entryId, currentUserId);
             if (rowsAffected > 0) {
                 Toast.makeText(this, "Entry deleted successfully!", Toast.LENGTH_SHORT).show();
                 setResult(RESULT_OK);
@@ -158,7 +158,7 @@ public class EntryDetailActivity extends AppCompatActivity {
                 Log.d("EntryDetailActivity", "Entry with ID " + entryId + " deleted successfully.");
             } else {
                 Toast.makeText(this, "Error deleting entry or entry not found.", Toast.LENGTH_SHORT).show();
-                Log.e("EntryDetailActivity", "Failed to delete entry with ID: " + entryId);
+                Log.e("EntryDetailActivity", "Failed to delete entry with ID: " + entryId + " for user " + currentUserId);
             }
         } else {
             Toast.makeText(this, "Error deleting entry: ID not found.", Toast.LENGTH_SHORT).show();

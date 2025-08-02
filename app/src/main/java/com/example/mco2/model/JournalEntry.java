@@ -1,19 +1,21 @@
-// src/main/java/com/example/mco2/model/JournalEntry.java
 package com.example.mco2.model;
 
 public class JournalEntry {
     private long id;
+    private long userId;
     private String date;
     private String mood;
     private String title;
     private String content;
     private String quote;
 
+    // No-argument constructor
     public JournalEntry() {
-        // Default constructor
     }
 
-    public JournalEntry(String date, String mood, String title, String content, String quote) {
+    // Constructor for creating a new entry
+    public JournalEntry(long userId, String date, String mood, String title, String content, String quote) {
+        this.userId = userId;
         this.date = date;
         this.mood = mood;
         this.title = title;
@@ -21,13 +23,43 @@ public class JournalEntry {
         this.quote = quote;
     }
 
-    // Getters and Setters
+    // Constructor for entries retrieved from the database (with ID)
+    public JournalEntry(long id, long userId, String date, String mood, String title, String content, String quote) {
+        this.id = id;
+        this.userId = userId;
+        this.date = date;
+        this.mood = mood;
+        this.title = title;
+        this.content = content;
+        this.quote = quote;
+    }
+
+    // Constructor for entries retrieved from the database (without quote)
+    public JournalEntry(long id, long userId, String date, String mood, String title, String content) {
+        this.id = id;
+        this.userId = userId;
+        this.date = date;
+        this.mood = mood;
+        this.title = title;
+        this.content = content;
+        this.quote = ""; // Default to an empty string
+    }
+
+    // Getters and setters
     public long getId() {
         return id;
     }
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 
     public String getDate() {
